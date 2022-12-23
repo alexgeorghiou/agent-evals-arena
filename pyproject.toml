@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-evals-arena"
+version = "0.1.0"
+description = "Evaluation harness for LLM agents: YAML suites, trajectory assertions, LLM-as-judge, Elo arena and CI regression gating."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Alex Georghiou" }]
+requires-python = ">=3.11"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Software Development :: Testing",
+]
+dependencies = [
+  "pydantic>=2.7,<3",
+  "pyyaml>=6.0",
+  "typer>=0.12",
+  "rich>=13.7",
+  "jsonschema>=4.22",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.40"]
+dashboard = ["streamlit>=1.36", "pandas>=2.2"]
+dev = [
+  "pytest>=8.2",
+  "pytest-cov>=5.0",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "types-PyYAML",
+  "types-jsonschema",
+]
+
+[project.scripts]
+arena = "evals_arena.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/evals_arena"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "PL", "PT"]
+ignore = ["PLR0913", "PLR2004", "PLR0911", "PLR0912", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLR2004", "S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+files = ["src"]
