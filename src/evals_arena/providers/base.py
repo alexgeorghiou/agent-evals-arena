@@ -35,6 +35,12 @@ class Message:
     tool_calls: list[ToolCall] = field(default_factory=list)
     tool_call_id: str | None = None
     is_error: bool = False
+    provider_payload: Any = None
+    """Opaque vendor content for assistant turns (e.g. Anthropic thinking blocks).
+
+    Adapters replay it verbatim when the conversation goes back to the same vendor,
+    so nothing the model produced is silently dropped between turns.
+    """
 
     @classmethod
     def user(cls, text: str) -> Message:
@@ -68,6 +74,8 @@ class Completion:
     stop_reason: str = "end_turn"
     latency_ms: float | None = None
     """Provider-reported latency. Fakes use this to simulate time deterministically."""
+    raw: Any = None
+    """Vendor payload to store on the assistant message (see ``Message.provider_payload``)."""
 
 
 @dataclass(frozen=True)
