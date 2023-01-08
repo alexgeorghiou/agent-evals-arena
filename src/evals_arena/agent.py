@@ -73,6 +73,7 @@ def run_agent(
             )
     else:
         trace.stop_reason = "max_turns"
-        trace.output = trace.messages[-1].content if trace.messages else ""
+        assistant = [m for m in trace.messages if m.role == "assistant"]
+        trace.output = assistant[-1].content if assistant else ""
     trace.trajectory = list(sandbox.trajectory)
     return trace
