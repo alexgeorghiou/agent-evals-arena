@@ -61,33 +61,35 @@ def normalise(scores: list[CriterionScore], rubric: Rubric) -> float:
     return max(0.0, min(1.0, value))
 
 
+def _balanced_objects(text: str) -> list[str]:
+    """Return every top-level ``{...}`` span, honouring JSON string escapes."""
+    spans: list[str] = []
+    depth, start, in_str, escape = 0, -1, False, False
+    for i, ch in enumerate(text):
+        if in_str:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_str = False
+        elif ch == '"' and depth > 0:
+            in_str = True
+        elif ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}" and depth > 0:
+            depth -= 1
+            if depth == 0:
+                spans.append(text[start : i + 1])
+    return spans
+
+
 def extract_json(text: str) -> dict[str, Any]:
     """Pull the first JSON object out of a model reply (tolerates fences and prose)."""
-    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.DOTALL)
-    candidates = [fenced.group(1)] if fenced else []
-    start = text.find("{")
-    while start != -1:
-        depth, in_str, escape = 0, False, False
-        for i in range(start, len(text)):
-            ch = text[i]
-            if in_str:
-                if escape:
-                    escape = False
-                elif ch == "\\":
-                    escape = True
-                elif ch == '"':
-                    in_str = False
-            elif ch == '"':
-                in_str = True
-            elif ch == "{":
-                depth += 1
-            elif ch == "}":
-                depth -= 1
-                if depth == 0:
-                    candidates.append(text[start : i + 1])
-                    break
-        start = text.find("{", start + 1) if not candidates else -1
-    for raw in candidates:
+    fenced = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.DOTALL)
+    for raw in [*fenced, *_balanced_objects(text)]:
         try:
             value = json.loads(raw)
         except json.JSONDecodeError:
