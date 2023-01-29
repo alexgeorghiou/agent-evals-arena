@@ -1,0 +1,113 @@
+name: weather-agent
+version: "1"
+description: >
+  A weather assistant with two tools. Checks that the agent grounds answers in
+  tool output, passes the right arguments and does not call tools needlessly.
+
+agent:
+  system_prompt: |
+    You are a concise weather assistant. Always use the tools for current
+    conditions or forecasts and never invent numbers. If a tool fails, say so.
+  max_turns: 6
+
+tools:
+  - name: get_weather
+    description: Current conditions for a city.
+    parameters:
+      type: object
+      properties:
+        city: {type: string, description: City name}
+        unit: {type: string, enum: [celsius, fahrenheit], default: celsius}
+      required: [city]
+    responses:
+      - when: {city: paris}
+        returns: {city: Paris, temp_c: 18, condition: sunny, wind_kph: 9}
+      - when: {city: "re:^(oslo|osl)$"}
+        returns: {city: Oslo, temp_c: -3, condition: light snow, wind_kph: 14}
+      - when: {city: lisbon}
+        returns: {city: Lisbon, temp_c: 22, condition: clear, wind_kph: 12}
+      - when: {city: "atlantis*"}
+        error: "city not found"
+    default: {city: unknown, temp_c: 15, condition: cloudy, wind_kph: 5}
+
+  - name: get_forecast
+    description: Daily forecast for the next N days (1-7).
+    parameters:
+      type: object
+      properties:
+        city: {type: string}
+        days: {type: integer, minimum: 1, maximum: 7}
+      required: [city, days]
+    responses:
+      - when: {city: lisbon, days: 3}
+        returns:
+          city: Lisbon
+          days:
+            - {day: Mon, high_c: 23, low_c: 15, condition: sunny}
+            - {day: Tue, high_c: 21, low_c: 14, condition: showers}
+            - {day: Wed, high_c: 24, low_c: 16, condition: sunny}
+
+rubrics:
+  grounded-answer:
+    instructions: Penalise any number that does not come from the tool output.
+    criteria:
+      - name: accuracy
+        description: Reported values match the tool output exactly.
+        weight: 2
+        keywords: []
+      - name: helpfulness
+        description: Answers the actual question directly and concisely.
+        weight: 1
+
+cases:
+  - id: paris-now
+    description: Single lookup with argument check.
+    input: What's the weather like in Paris right now?
+    reference: It is 18 C and sunny in Paris, with light wind around 9 km/h.
+    tags: [smoke, single-tool]
+    assertions:
+      - {type: tool_called, tool: get_weather, args: {city: paris}}
+      - {type: max_tool_calls, max: 1}
+      - {type: contains, value: ["18", "sunny"]}
+      - {type: judge, rubric: grounded-answer, min_score: 0.6}
+      - {type: latency, max_ms: 2000}
+
+  - id: compare-cities
+    description: Two lookups; the answer must name the warmer city.
+    input: Is it warmer in Oslo or Lisbon today?
+    reference: Lisbon is warmer at 22 C versus -3 C with light snow in Oslo.
+    tags: [multi-tool]
+    assertions:
+      - {type: tool_called, tool: get_weather, args: {city: oslo}}
+      - {type: tool_called, tool: get_weather, args: {city: lisbon}}
+      - {type: regex, pattern: "lisbon[^.]*warmer|warmer[^.]*lisbon", flags: [i]}
+      - {type: judge, rubric: grounded-answer, min_score: 0.6}
+
+  - id: lisbon-forecast
+    description: Forecast tool with integer argument.
+    input: Give me the 3-day forecast for Lisbon. Which day should I pack an umbrella?
+    reference: Mon 23/15 sunny, Tue 21/14 showers, Wed 24/16 sunny - bring an umbrella on Tuesday.
+    tags: [single-tool]
+    assertions:
+      - {type: tool_sequence, steps: [{tool: get_forecast, args: {city: lisbon, days: 3}}], mode: exact}
+      - {type: contains, value: tuesday}
+      - {type: not_contains, value: ["wednesday showers"]}
+
+  - id: unknown-city
+    description: Tool error must be surfaced, not papered over.
+    input: What's the weather in Atlantis?
+    tags: [errors]
+    assertions:
+      - {type: tool_called, tool: get_weather}
+      - {type: contains, value: ["not found", "couldn't", "could not", "unable"], mode: any}
+      - {type: regex, pattern: "\\d+\\s*(°|c\\b|degrees)", flags: [i], weight: 0, name: has-temperature}
+      - {type: not_contains, value: ["sunny", "cloudy"]}
+
+  - id: no-tool-needed
+    description: General knowledge - the agent should not call tools.
+    input: At what temperature does water boil at sea level, in Fahrenheit?
+    tags: [restraint]
+    assertions:
+      - {type: tool_not_called, tool: get_weather}
+      - {type: tool_not_called, tool: get_forecast}
+      - {type: contains, value: "212"}

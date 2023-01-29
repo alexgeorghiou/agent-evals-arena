@@ -14,7 +14,7 @@ from evals_arena.assertions import EvalContext, evaluate
 from evals_arena.judge import Judge
 from evals_arena.pricing import PriceTable
 from evals_arena.providers.base import Provider, RequestContext
-from evals_arena.results import CaseResult, RunResult
+from evals_arena.results import AssertionResult, CaseResult, RunResult
 from evals_arena.sandbox import MockToolSandbox
 from evals_arena.schema import Case, Suite
 
@@ -27,7 +27,7 @@ def new_run_id(suite: str, model: str) -> str:
     return f"{suite}--{slug}--{stamp}-{uuid.uuid4().hex[:6]}"
 
 
-def score_case(results: list) -> float:  # type: ignore[type-arg]
+def score_case(results: list[AssertionResult]) -> float:
     total = sum(r.weight for r in results)
     if total == 0:
         return 1.0 if all(r.passed for r in results) else 0.0

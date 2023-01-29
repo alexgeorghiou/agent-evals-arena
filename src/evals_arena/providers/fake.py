@@ -63,9 +63,20 @@ def load_fake_scripts(paths: Iterable[str | Path], model: str) -> ScriptBook:
                 f = sibling
             data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
             suite = str(data.get("suite", ""))
-            cases = (data.get("models") or {}).get(model) or {}
+            cases = _resolve_model(data.get("models") or {}, model)
             book.setdefault(suite, {}).update(cases)
     return book
+
+
+def _resolve_model(models: dict[str, Any], model: str, seen: tuple[str, ...] = ()) -> Script | Any:
+    """Return ``model``'s case scripts, following ``_inherit`` chains."""
+    if model in seen:
+        raise ValueError(f"cyclic _inherit chain: {' -> '.join((*seen, model))}")
+    own = dict(models.get(model) or {})
+    parent = own.pop("_inherit", None)
+    if parent is None:
+        return own
+    return {**_resolve_model(models, str(parent), (*seen, model)), **own}
 
 
 class FakeProvider(Provider):

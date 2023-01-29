@@ -1,0 +1,43 @@
+# Scripted replies for the offline fake provider. Each model is a "persona".
+suite: weather-agent
+models:
+  fake-strong:
+    paris-now:
+      - {call: get_weather, args: {city: Paris}, latency_ms: 380}
+      - {say: "It's {{get_weather.temp_c}} C and {{get_weather.condition}} in Paris, with wind around {{get_weather.wind_kph}} km/h.", latency_ms: 520}
+    compare-cities:
+      - calls:
+          - {call: get_weather, args: {city: Oslo}}
+          - {call: get_weather, args: {city: Lisbon}}
+        latency_ms: 410
+      - {say: "Lisbon is warmer: 22 C and clear, versus -3 C with light snow in Oslo.", latency_ms: 600}
+    lisbon-forecast:
+      - {call: get_forecast, args: {city: Lisbon, days: 3}, latency_ms: 350}
+      - {say: "Lisbon: Mon 23/15 C sunny, Tue 21/14 C showers, Wed 24/16 C sunny. Pack an umbrella on Tuesday.", latency_ms: 640}
+    unknown-city:
+      - {call: get_weather, args: {city: Atlantis}, latency_ms: 300}
+      - {say: "Sorry - the weather service reports that Atlantis was not found, so I can't give conditions there.", latency_ms: 420}
+    no-tool-needed:
+      - {say: "Water boils at 212 F (100 C) at sea level.", latency_ms: 310}
+
+  fake-sloppy:
+    paris-now:
+      - {say: "It's probably about 20 degrees and sunny in Paris.", latency_ms: 150}
+    compare-cities:
+      - {call: get_weather, args: {city: Oslo}, latency_ms: 160}
+      - {say: "Oslo is -3 C. Lisbon is usually warmer.", latency_ms: 190}
+    lisbon-forecast:
+      - {call: get_forecast, args: {city: Lisbon, days: 7}, latency_ms: 140}
+      - {say: "Looks mostly sunny all week.", latency_ms: 170}
+    unknown-city:
+      - {call: get_weather, args: {city: Atlantis}, latency_ms: 120}
+      - {say: "It's 25 degrees and sunny in Atlantis.", latency_ms: 150}
+    no-tool-needed:
+      - {call: get_weather, args: {city: sea level}, latency_ms: 130}
+      - {say: "Water boils at 212 F.", latency_ms: 140}
+
+  fake-fast:
+    _inherit: fake-strong
+    lisbon-forecast:
+      - {call: get_forecast, args: {city: Lisbon, days: 3}, latency_ms: 90}
+      - {say: "Mon sunny, Tue showers, Wed sunny.", latency_ms: 110}
