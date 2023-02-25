@@ -68,7 +68,9 @@ def load_fake_scripts(paths: Iterable[str | Path], model: str) -> ScriptBook:
     return book
 
 
-def _resolve_model(models: dict[str, Any], model: str, seen: tuple[str, ...] = ()) -> Script | Any:
+def _resolve_model(
+    models: dict[str, Any], model: str, seen: tuple[str, ...] = ()
+) -> dict[str, Script]:
     """Return ``model``'s case scripts, following ``_inherit`` chains."""
     if model in seen:
         raise ValueError(f"cyclic _inherit chain: {' -> '.join((*seen, model))}")

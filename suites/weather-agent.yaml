@@ -100,7 +100,6 @@ cases:
     assertions:
       - {type: tool_called, tool: get_weather}
       - {type: contains, value: ["not found", "couldn't", "could not", "unable"], mode: any}
-      - {type: regex, pattern: "\\d+\\s*(°|c\\b|degrees)", flags: [i], weight: 0, name: has-temperature}
       - {type: not_contains, value: ["sunny", "cloudy"]}
 
   - id: no-tool-needed
