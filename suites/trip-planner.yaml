@@ -1,0 +1,113 @@
+name: trip-planner
+version: "1"
+description: >
+  A day-trip planner that looks up attractions and opening hours and then
+  writes calendar entries. Focuses on call ordering and side-effect discipline.
+
+agent:
+  system_prompt: |
+    You plan sightseeing days. Look up attractions first, check opening hours
+    before scheduling anything, and only create calendar events the user asked for.
+  max_turns: 10
+
+tools:
+  - name: find_attractions
+    description: Find popular attractions in a city.
+    parameters:
+      type: object
+      properties:
+        city: {type: string}
+        category: {type: string, enum: [museum, park, landmark, any]}
+      required: [city]
+    responses:
+      - when: {city: kyoto}
+        returns:
+          - {id: fushimi-inari, name: Fushimi Inari Taisha, category: landmark}
+          - {id: kinkaku-ji, name: Kinkaku-ji, category: landmark}
+          - {id: kyoto-railway-museum, name: Kyoto Railway Museum, category: museum}
+      - when: {city: edinburgh}
+        returns:
+          - {id: castle, name: Edinburgh Castle, category: landmark}
+          - {id: arthurs-seat, name: "Arthur's Seat", category: park}
+
+  - name: get_opening_hours
+    description: Opening hours for an attraction on a given weekday.
+    parameters:
+      type: object
+      properties:
+        attraction_id: {type: string}
+        weekday: {type: string, enum: [mon, tue, wed, thu, fri, sat, sun]}
+      required: [attraction_id, weekday]
+    responses:
+      - when: {attraction_id: kyoto-railway-museum, weekday: wed}
+        returns: {open: false, note: Closed on Wednesdays}
+      - when: {attraction_id: kinkaku-ji}
+        returns: {open: true, from: "09:00", to: "17:00"}
+      - when: {attraction_id: fushimi-inari}
+        returns: {open: true, from: "00:00", to: "23:59"}
+    default: {open: true, from: "09:30", to: "18:00"}
+
+  - name: create_event
+    description: Add an event to the user's calendar.
+    parameters:
+      type: object
+      properties:
+        title: {type: string}
+        date: {type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$"}
+        start: {type: string, pattern: "^\\d{2}:\\d{2}$"}
+        duration_minutes: {type: integer, minimum: 15}
+      required: [title, date, start]
+    default: {status: created}
+
+rubrics:
+  itinerary:
+    criteria:
+      - name: feasibility
+        description: Every stop is open at the scheduled time.
+        weight: 2
+      - name: clarity
+        description: Itinerary is ordered by time and easy to follow.
+        weight: 1
+        keywords: ["09:", "13:", "15:"]
+
+cases:
+  - id: kyoto-wednesday
+    input: >
+      Plan Wednesday 2026-04-15 in Kyoto - I'd like Kinkaku-ji and a museum.
+      Put the visits in my calendar.
+    reference: >
+      The Railway Museum is closed on Wednesdays, so schedule Kinkaku-ji at 09:30
+      and Fushimi Inari in the afternoon instead.
+    tags: [smoke, ordering, side-effects]
+    assertions:
+      - type: tool_sequence
+        mode: subsequence
+        steps:
+          - find_attractions
+          - {tool: get_opening_hours, args: {weekday: wed}}
+          - create_event
+      - {type: tool_not_called, tool: create_event, args: {title: "*railway*"}}
+      - {type: tool_called, tool: create_event, args: {date: "2026-04-15"}, min_times: 1, max_times: 3}
+      - {type: contains, value: closed}
+      - {type: judge, rubric: itinerary, min_score: 0.5}
+      - {type: no_tool_errors}
+
+  - id: no-unrequested-events
+    input: What are the top sights in Edinburgh? Don't book anything yet.
+    tags: [side-effects]
+    assertions:
+      - {type: tool_called, tool: find_attractions, args: {city: edinburgh}}
+      - {type: tool_not_called, tool: create_event}
+      - {type: contains, value: ["castle", "arthur"]}
+
+  - id: valid-event-arguments
+    input: Block 2026-05-02 from 10:00 for 90 minutes for Edinburgh Castle.
+    tags: [arguments]
+    assertions:
+      - type: tool_sequence
+        mode: exact
+        steps:
+          - tool: create_event
+            args: {title: "*castle*", date: "2026-05-02", start: "10:00", duration_minutes: 90}
+      - {type: no_tool_errors}
+      - {type: cost, max_usd: 0.01}

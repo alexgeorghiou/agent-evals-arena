@@ -1,0 +1,41 @@
+suite: trip-planner
+models:
+  fake-strong:
+    kyoto-wednesday:
+      - {call: find_attractions, args: {city: Kyoto, category: any}, latency_ms: 350}
+      - calls:
+          - {call: get_opening_hours, args: {attraction_id: kinkaku-ji, weekday: wed}}
+          - {call: get_opening_hours, args: {attraction_id: kyoto-railway-museum, weekday: wed}}
+          - {call: get_opening_hours, args: {attraction_id: fushimi-inari, weekday: wed}}
+        latency_ms: 420
+      - calls:
+          - {call: create_event, args: {title: Kinkaku-ji, date: "2026-04-15", start: "09:30", duration_minutes: 120}}
+          - {call: create_event, args: {title: Fushimi Inari Taisha, date: "2026-04-15", start: "13:30", duration_minutes: 150}}
+        latency_ms: 380
+      - {say: "The Kyoto Railway Museum is closed on Wednesdays, so I swapped it for Fushimi Inari. Your day: 09:30 Kinkaku-ji (open 09:00-17:00), 13:30 Fushimi Inari Taisha (open all day), free from 15:00. Both are in your calendar.", latency_ms: 800}
+    no-unrequested-events:
+      - {call: find_attractions, args: {city: Edinburgh}, latency_ms: 300}
+      - {say: "Top sights: Edinburgh Castle and Arthur's Seat. Nothing booked - tell me when you'd like to schedule.", latency_ms: 450}
+    valid-event-arguments:
+      - {call: create_event, args: {title: Edinburgh Castle, date: "2026-05-02", start: "10:00", duration_minutes: 90}, latency_ms: 330}
+      - {say: "Done - Edinburgh Castle is blocked on 2026-05-02 from 10:00 to 11:30.", latency_ms: 300}
+
+  fake-sloppy:
+    kyoto-wednesday:
+      - {call: find_attractions, args: {city: Kyoto}, latency_ms: 160}
+      - calls:
+          - {call: create_event, args: {title: Kinkaku-ji, date: "2026-04-15", start: "09:00"}}
+          - {call: create_event, args: {title: Kyoto Railway Museum, date: "2026-04-15", start: "14:00"}}
+        latency_ms: 170
+      - {say: "Booked Kinkaku-ji in the morning and the Railway Museum in the afternoon.", latency_ms: 200}
+    no-unrequested-events:
+      - {call: find_attractions, args: {city: Edinburgh}, latency_ms: 140}
+      - {call: create_event, args: {title: Edinburgh Castle, date: "2026-05-01", start: "10:00"}, latency_ms: 120}
+      - {say: "Edinburgh Castle and Arthur's Seat are the highlights - I've pencilled in the castle for you.", latency_ms: 160}
+    valid-event-arguments:
+      - {call: create_event, args: {title: Edinburgh Castle, date: "02/05/2026", start: "10am"}, latency_ms: 120}
+      - {call: create_event, args: {title: Edinburgh Castle, date: "2026-05-02", start: "10:00"}, latency_ms: 120}
+      - {say: "Booked.", latency_ms: 100}
+
+  fake-fast:
+    _inherit: fake-strong
