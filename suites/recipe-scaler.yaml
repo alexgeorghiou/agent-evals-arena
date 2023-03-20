@@ -1,0 +1,80 @@
+name: recipe-scaler
+version: "1"
+description: >
+  A kitchen assistant that scales recipes and converts units. Checks numeric
+  grounding and strict JSON output.
+
+agent:
+  system_prompt: |
+    You scale recipes and convert units. Use convert_units for every unit
+    conversion - never do conversions in your head.
+  max_turns: 8
+
+tools:
+  - name: get_recipe
+    description: Fetch a recipe by name with ingredient quantities for its base servings.
+    parameters:
+      type: object
+      properties:
+        name: {type: string}
+      required: [name]
+    responses:
+      - when: {name: "*pancake*"}
+        returns:
+          name: Buttermilk pancakes
+          servings: 4
+          ingredients:
+            - {item: flour, amount: 2, unit: cup}
+            - {item: buttermilk, amount: 2, unit: cup}
+            - {item: butter, amount: 3, unit: tbsp}
+            - {item: egg, amount: 2, unit: whole}
+
+  - name: convert_units
+    description: Convert a quantity of an ingredient between units.
+    parameters:
+      type: object
+      properties:
+        amount: {type: number}
+        from_unit: {type: string}
+        to_unit: {type: string}
+        ingredient: {type: string}
+      required: [amount, from_unit, to_unit]
+    responses:
+      - when: {amount: 3, from_unit: cup, to_unit: g, ingredient: flour}
+        returns: {amount: 375, unit: g}
+      - when: {amount: 3, from_unit: cup, to_unit: ml}
+        returns: {amount: 710, unit: ml}
+      - when: {amount: 350, from_unit: "re:^(f|fahrenheit)$", to_unit: "re:^(c|celsius)$"}
+        returns: {amount: 177, unit: C}
+
+cases:
+  - id: scale-to-six
+    input: >
+      Scale the buttermilk pancake recipe to 6 servings and give flour in grams and
+      buttermilk in millilitres. Reply as JSON: {"servings": n, "ingredients": [{"item", "amount", "unit"}]}.
+    tags: [smoke, json]
+    assertions:
+      - {type: tool_sequence, steps: [get_recipe, convert_units], mode: subsequence}
+      - {type: tool_called, tool: convert_units, args: {amount: 3, to_unit: g}}
+      - {type: tool_called, tool: convert_units, args: {amount: 3, to_unit: ml}}
+      - type: json_schema
+        schema:
+          type: object
+          required: [servings, ingredients]
+          properties:
+            servings: {const: 6}
+            ingredients:
+              type: array
+              minItems: 4
+              items:
+                type: object
+                required: [item, amount, unit]
+      - {type: contains, value: ["375", "710"]}
+
+  - id: oven-temperature
+    input: My oven only shows Celsius. What is 350 F?
+    tags: [conversion]
+    assertions:
+      - {type: tool_called, tool: convert_units, args: {amount: 350}}
+      - {type: regex, pattern: "\\b177\\s*(°\\s*)?C\\b", flags: [i]}
+      - {type: max_tool_calls, max: 1}

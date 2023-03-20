@@ -1,0 +1,27 @@
+suite: recipe-scaler
+models:
+  fake-strong:
+    scale-to-six:
+      - {call: get_recipe, args: {name: buttermilk pancakes}, latency_ms: 300}
+      - calls:
+          - {call: convert_units, args: {amount: 3, from_unit: cup, to_unit: g, ingredient: flour}}
+          - {call: convert_units, args: {amount: 3, from_unit: cup, to_unit: ml, ingredient: buttermilk}}
+        latency_ms: 360
+      - {say: "{\"servings\": 6, \"ingredients\": [{\"item\": \"flour\", \"amount\": 375, \"unit\": \"g\"}, {\"item\": \"buttermilk\", \"amount\": 710, \"unit\": \"ml\"}, {\"item\": \"butter\", \"amount\": 4.5, \"unit\": \"tbsp\"}, {\"item\": \"egg\", \"amount\": 3, \"unit\": \"whole\"}]}", latency_ms: 650}
+    oven-temperature:
+      - {call: convert_units, args: {amount: 350, from_unit: F, to_unit: C}, latency_ms: 260}
+      - {say: "350 F is about 177 °C.", latency_ms: 210}
+
+  fake-sloppy:
+    scale-to-six:
+      - {call: get_recipe, args: {name: pancakes}, latency_ms: 150}
+      - {say: "{\"servings\": 6, \"ingredients\": [{\"item\": \"flour\", \"amount\": 360, \"unit\": \"g\"}, {\"item\": \"buttermilk\", \"amount\": 720, \"unit\": \"ml\"}]}", latency_ms: 220}
+    oven-temperature:
+      - {say: "That's roughly 180 C.", latency_ms: 120}
+
+  fake-fast:
+    _inherit: fake-strong
+    oven-temperature:
+      - {call: convert_units, args: {amount: 350, from_unit: fahrenheit, to_unit: celsius}, latency_ms: 80}
+      - {call: convert_units, args: {amount: 350, from_unit: F, to_unit: C}, latency_ms: 80}
+      - {say: "177 C", latency_ms: 60}
