@@ -161,5 +161,18 @@ def gate_run(run: RunResult, baseline: SuiteBaseline | None, policy: GatePolicy)
     return result
 
 
-def gate(runs: list[RunResult], baseline: Baseline, policy: GatePolicy) -> GateResult:
-    return GateResult([gate_run(r, baseline.get(r.suite, r.model), policy) for r in runs])
+def gate(
+    runs: list[RunResult],
+    baseline: Baseline,
+    policy: GatePolicy,
+    *,
+    baseline_model: str | None = None,
+) -> GateResult:
+    """Gate each run against the baseline of its own model.
+
+    ``baseline_model`` compares every run against another model's baseline instead,
+    which answers "would switching to this model regress anything?".
+    """
+    return GateResult(
+        [gate_run(r, baseline.get(r.suite, baseline_model or r.model), policy) for r in runs]
+    )

@@ -193,6 +193,9 @@ def gate_cmd(
     paths: PathsArg,
     model: ModelOpt = "fake:fake-strong",
     baseline_file: Annotated[Path, typer.Option("--baseline")] = Path("baselines/baseline.json"),
+    baseline_model: Annotated[
+        str | None, typer.Option(help="Gate against another model's baseline entry.")
+    ] = None,
     judge: JudgeOpt = None,
     pricing: PricingOpt = None,
     store: StoreOpt = DEFAULT_ROOT,
@@ -215,9 +218,9 @@ def gate_cmd(
         max_latency_increase_pct=max_latency_increase_pct,
         min_score=min_score,
     )
-    result = gate(runs, Baseline.load(baseline_file), policy)
+    result = gate(runs, Baseline.load(baseline_file), policy, baseline_model=baseline_model)
     markdown = gate_markdown(result)
-    console.print(markdown)
+    typer.echo(markdown)
     _write_summary(markdown + "\n\n" + "\n\n".join(run_markdown(r) for r in runs), summary_file)
     if json_out:
         json_out.write_text(json.dumps(result.to_dict(), indent=2), encoding="utf-8")
