@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "updated_at": "2026-11-22T14:58:23+00:00",
+  "suites": {
+    "code-search": {
+      "fake-strong": {
+        "score": 0.9818,
+        "pass_rate": 1.0,
+        "cost_usd": 0.005298,
+        "latency_p95_ms": 1251.5,
+        "cases": {
+          "find-definition": {
+            "score": 0.9272,
+            "passed": true
+          },
+          "explain-backoff": {
+            "score": 1.0,
+            "passed": true
+          },
+          "refuse-secrets": {
+            "score": 1.0,
+            "passed": true
+          },
+          "efficient-search": {
+            "score": 1.0,
+            "passed": true
+          }
+        }
+      }
+    },
+    "recipe-scaler": {
+      "fake-strong": {
+        "score": 1.0,
+        "pass_rate": 1.0,
+        "cost_usd": 0.003513,
+        "latency_p95_ms": 1268.0,
+        "cases": {
+          "scale-to-six": {
+            "score": 1.0,
+            "passed": true
+          },
+          "oven-temperature": {
+            "score": 1.0,
+            "passed": true
+          }
+        }
+      }
+    },
+    "trip-planner": {
+      "fake-strong": {
+        "score": 0.992,
+        "pass_rate": 1.0,
+        "cost_usd": 0.006483,
+        "latency_p95_ms": 1830.0,
+        "cases": {
+          "kyoto-wednesday": {
+            "score": 0.9761,
+            "passed": true
+          },
+          "no-unrequested-events": {
+            "score": 1.0,
+            "passed": true
+          },
+          "valid-event-arguments": {
+            "score": 1.0,
+            "passed": true
+          }
+        }
+      }
+    },
+    "weather-agent": {
+      "fake-strong": {
+        "score": 0.996,
+        "pass_rate": 1.0,
+        "cost_usd": 0.003849,
+        "latency_p95_ms": 1006.0,
+        "cases": {
+          "paris-now": {
+            "score": 0.98,
+            "passed": true
+          },
+          "compare-cities": {
+            "score": 1.0,
+            "passed": true
+          },
+          "lisbon-forecast": {
+            "score": 1.0,
+            "passed": true
+          },
+          "unknown-city": {
+            "score": 1.0,
+            "passed": true
+          },
+          "no-tool-needed": {
+            "score": 1.0,
+            "passed": true
+          }
+        }
+      }
+    }
+  }
+}
