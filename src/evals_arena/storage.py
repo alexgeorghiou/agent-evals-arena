@@ -65,7 +65,7 @@ class ResultStore:
         assert run.summary is not None
         self.runs_dir.mkdir(parents=True, exist_ok=True)
         path = self.runs_dir / f"{run.run_id}.json"
-        path.write_text(run.model_dump_json(indent=2), encoding="utf-8")
+        path.write_text(run.model_dump_json(indent=2), encoding="utf-8", newline="\n")
         s = run.summary
         with self._conn() as conn:
             conn.execute(

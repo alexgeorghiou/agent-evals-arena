@@ -48,7 +48,7 @@ class Baseline(BaseModel):
     def save(self, path: str | Path) -> None:
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(self.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        p.write_text(self.model_dump_json(indent=2) + "\n", encoding="utf-8", newline="\n")
 
     def get(self, suite: str, model: str) -> SuiteBaseline | None:
         return self.suites.get(suite, {}).get(model)
