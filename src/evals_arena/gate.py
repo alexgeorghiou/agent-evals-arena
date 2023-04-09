@@ -104,9 +104,7 @@ class GateResult:
     def to_dict(self) -> dict[str, Any]:
         return {
             "passed": self.passed,
-            "suites": [
-                {**vars(s), "score_delta": s.score_delta} for s in self.suites
-            ],
+            "suites": [{**vars(s), "score_delta": s.score_delta} for s in self.suites],
         }
 
 
@@ -150,7 +148,9 @@ def gate_run(run: RunResult, baseline: SuiteBaseline | None, policy: GatePolicy)
     if policy.max_cost_increase_pct is not None:
         inc = _pct_increase(summary.total_cost_usd, baseline.cost_usd)
         if inc > policy.max_cost_increase_pct:
-            result.reasons.append(f"cost up {inc:.0f}% (allowed {policy.max_cost_increase_pct:.0f}%)")
+            result.reasons.append(
+                f"cost up {inc:.0f}% (allowed {policy.max_cost_increase_pct:.0f}%)"
+            )
     if policy.max_latency_increase_pct is not None:
         inc = _pct_increase(summary.latency_p95_ms, baseline.latency_p95_ms)
         if inc > policy.max_latency_increase_pct:

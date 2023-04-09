@@ -174,7 +174,9 @@ def run(
 def baseline(
     paths: PathsArg,
     model: ModelOpt = "fake:fake-strong",
-    out: Annotated[Path, typer.Option(help="Baseline JSON file.")] = Path("baselines/baseline.json"),
+    out: Annotated[Path, typer.Option(help="Baseline JSON file.")] = Path(
+        "baselines/baseline.json"
+    ),
     judge: JudgeOpt = None,
     pricing: PricingOpt = None,
 ) -> None:
@@ -265,8 +267,14 @@ def _leaderboard_table(board: Leaderboard) -> Table:
         table.add_column(col, justify="left" if col == "model" else "right")
     for i, s in enumerate(board.standings(), 1):
         table.add_row(
-            str(i), s.model, f"{s.rating:.0f}", str(s.games), str(s.wins), str(s.losses),
-            str(s.ties), f"{s.win_rate:.0%}",
+            str(i),
+            s.model,
+            f"{s.rating:.0f}",
+            str(s.games),
+            str(s.wins),
+            str(s.losses),
+            str(s.ties),
+            f"{s.win_rate:.0%}",
         )
     return table
 
@@ -297,8 +305,13 @@ def runs(
         table.add_column(col)
     for row in ResultStore(store).list(suite=suite, model=model, limit=limit):
         table.add_row(
-            row["run_id"], row["suite"], row["model"], f"{row['score']:.3f}",
-            f"{row['pass_rate']:.0%}", f"{row['cost_usd']:.4f}", row["started_at"],
+            row["run_id"],
+            row["suite"],
+            row["model"],
+            f"{row['score']:.3f}",
+            f"{row['pass_rate']:.0%}",
+            f"{row['cost_usd']:.4f}",
+            row["started_at"],
         )
     console.print(table)
 

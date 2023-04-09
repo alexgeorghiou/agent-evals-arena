@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import random
 from collections.abc import Sequence
 
 
@@ -28,8 +29,6 @@ def bootstrap_ci(
     values: Sequence[float], *, iterations: int = 1000, alpha: float = 0.05, seed: int = 7
 ) -> tuple[float, float]:
     """Percentile bootstrap confidence interval for the mean (deterministic seed)."""
-    import random
-
     if len(values) < 2:
         m = mean(values)
         return m, m

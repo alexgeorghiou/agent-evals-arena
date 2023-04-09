@@ -81,7 +81,10 @@ def arena_markdown(report: ArenaReport) -> str:
 
 
 def leaderboard_markdown(standings: list[Standing]) -> str:
-    lines = ["| # | model | Elo | games | W | L | T | win rate |", "|---:|---|---:|---:|---:|---:|---:|---:|"]
+    lines = [
+        "| # | model | Elo | games | W | L | T | win rate |",
+        "|---:|---|---:|---:|---:|---:|---:|---:|",
+    ]
     for i, s in enumerate(standings, 1):
         lines.append(
             f"| {i} | `{s.model}` | {s.rating:.0f} | {s.games} | {s.wins} | {s.losses} "

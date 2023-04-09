@@ -55,12 +55,12 @@ def load_fake_scripts(paths: Iterable[str | Path], model: str) -> ScriptBook:
     for item in paths:
         p = Path(item)
         files = sorted(p.rglob("*.fake.yaml")) if p.is_dir() else [p]
-        for f in files:
+        for candidate in files:
+            f = candidate
             if not f.name.endswith(".fake.yaml"):
-                sibling = f.with_name(f.stem + ".fake.yaml")
-                if not sibling.exists():
+                f = candidate.with_name(candidate.stem + ".fake.yaml")
+                if not f.exists():
                     continue
-                f = sibling
             data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
             suite = str(data.get("suite", ""))
             cases = _resolve_model(data.get("models") or {}, model)
@@ -161,8 +161,10 @@ class FakeProvider(Provider):
             tool_calls.append(
                 ToolCall(id=f"call_{turn}_{i}", name=str(name), arguments=dict(raw.get("args", {})))
             )
-        text = self._render(str(step.get("say", "")), messages) if not tool_calls else str(
-            step.get("say", "")
+        text = (
+            self._render(str(step.get("say", "")), messages)
+            if not tool_calls
+            else str(step.get("say", ""))
         )
 
         prompt = (system or "") + "".join(m.content for m in messages)

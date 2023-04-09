@@ -56,8 +56,9 @@ def decide(
         else:
             winner = "B" if a.error else "A"
         return Duel(a.case_id, winner, "tie", a.score, b.score, "error")
-    verdict = prefer_with_swap(judge, task=task, output_a=a.output, output_b=b.output,
-                               reference=reference)
+    verdict = prefer_with_swap(
+        judge, task=task, output_a=a.output, output_b=b.output, reference=reference
+    )
     if verdict != "tie":
         return Duel(a.case_id, verdict, verdict, a.score, b.score, "judge")
     if abs(a.score - b.score) > score_margin:

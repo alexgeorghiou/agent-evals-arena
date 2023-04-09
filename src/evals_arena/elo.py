@@ -104,7 +104,7 @@ class Leaderboard:
                     (model, rating, now),
                 )
                 conn.execute(
-                    f"UPDATE ratings SET games = games + 1, {result} = {result} + 1 "  # noqa: S608
+                    f"UPDATE ratings SET games = games + 1, {result} = {result} + 1 "
                     "WHERE model = ?",
                     (model,),
                 )
@@ -124,9 +124,7 @@ class Leaderboard:
         finally:
             conn.close()
         return [
-            Standing(
-                r["model"], float(r["rating"]), r["games"], r["wins"], r["losses"], r["ties"]
-            )
+            Standing(r["model"], float(r["rating"]), r["games"], r["wins"], r["losses"], r["ties"])
             for r in rows
         ]
 

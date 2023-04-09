@@ -28,8 +28,8 @@ from evals_arena.schema import (
     JudgeAssertion,
     LatencyAssertion,
     MaxToolCallsAssertion,
-    NoToolErrorsAssertion,
     NotContainsAssertion,
+    NoToolErrorsAssertion,
     RegexAssertion,
     SequenceStep,
     Suite,
@@ -165,9 +165,7 @@ def _tool_called(a: ToolCalledAssertion, ctx: EvalContext) -> AssertionResult:
     too_many = a.max_times is not None and len(hits) > a.max_times
     if too_few and a.args is not None:
         near = [inv for inv in ctx.trajectory if inv.name == a.tool]
-        reason = (
-            explain_mismatch(a.args, near[0].arguments) if near else f"'{a.tool}' never called"
-        )
+        reason = explain_mismatch(a.args, near[0].arguments) if near else f"'{a.tool}' never called"
         return _result(a, False, f"no call matched args ({reason})", calls=len(hits))
     if too_few or too_many:
         bound = f">= {a.min_times}" + (f" and <= {a.max_times}" if a.max_times is not None else "")
@@ -205,9 +203,7 @@ def _tool_sequence(a: ToolSequenceAssertion, ctx: EvalContext) -> AssertionResul
     ok = sequence_matches(steps, ctx.trajectory, a.mode)
     actual = [inv.name for inv in ctx.trajectory]
     expected = [s.tool for s in steps]
-    return _result(
-        a, ok, "" if ok else f"{a.mode} {expected} not found in {actual}", actual=actual
-    )
+    return _result(a, ok, "" if ok else f"{a.mode} {expected} not found in {actual}", actual=actual)
 
 
 @evaluator(MaxToolCallsAssertion)

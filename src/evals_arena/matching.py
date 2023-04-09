@@ -28,8 +28,10 @@ def _match_str(expected: str, actual: Any) -> bool:
         return True
     if not isinstance(actual, str):
         # Allow "42" to match 42 so YAML authors don't have to care about quoting.
-        return isinstance(actual, (int, float)) and not isinstance(actual, bool) and (
-            expected == str(actual)
+        return (
+            isinstance(actual, (int, float))
+            and not isinstance(actual, bool)
+            and (expected == str(actual))
         )
     if expected.startswith("re:"):
         return re.search(expected[3:], actual, flags=re.IGNORECASE) is not None

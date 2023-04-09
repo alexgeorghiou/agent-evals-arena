@@ -30,9 +30,7 @@ class MockResponse(_Model):
 class MockTool(_Model):
     name: str = Field(pattern=r"^[a-zA-Z_][a-zA-Z0-9_\-]{0,63}$")
     description: str
-    parameters: dict[str, Any] = Field(
-        default_factory=lambda: {"type": "object", "properties": {}}
-    )
+    parameters: dict[str, Any] = Field(default_factory=lambda: {"type": "object", "properties": {}})
     responses: list[MockResponse] = Field(default_factory=list)
     default: Any = None
 
@@ -237,11 +235,14 @@ class Suite(_Model):
                 if name not in known:
                     raise ValueError(f"case '{case.id}' references unknown tool '{name}'")
             for assertion in [*self.default_assertions, *case.assertions]:
-                if isinstance(assertion, JudgeAssertion) and isinstance(assertion.rubric, str):
-                    if assertion.rubric not in self.rubrics:
-                        raise ValueError(
-                            f"case '{case.id}' references unknown rubric '{assertion.rubric}'"
-                        )
+                if (
+                    isinstance(assertion, JudgeAssertion)
+                    and isinstance(assertion.rubric, str)
+                    and assertion.rubric not in self.rubrics
+                ):
+                    raise ValueError(
+                        f"case '{case.id}' references unknown rubric '{assertion.rubric}'"
+                    )
         return self
 
     def tools_for(self, case: Case) -> list[MockTool]:

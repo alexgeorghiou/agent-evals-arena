@@ -23,7 +23,31 @@ Preference = Literal["A", "B", "tie"]
 
 _TOKEN = re.compile(r"[a-z0-9]+(?:[.,][0-9]+)?")
 _STOPWORDS = frozenset(
-    "a an the and or of to in on at for is are was were be it this that with by as from".split()
+    [
+        "a",
+        "an",
+        "the",
+        "and",
+        "or",
+        "of",
+        "to",
+        "in",
+        "on",
+        "at",
+        "for",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "it",
+        "this",
+        "that",
+        "with",
+        "by",
+        "as",
+        "from",
+    ]
 )
 
 
@@ -116,8 +140,8 @@ def parse_rubric_reply(text: str, rubric: Rubric) -> tuple[list[CriterionScore],
             )
             continue
         try:
-            raw = float(item.get("score"))
-        except (TypeError, ValueError) as exc:
+            raw = float(item["score"])
+        except (KeyError, TypeError, ValueError) as exc:
             raise JudgeParseError(f"criterion '{criterion.name}' has no numeric score") from exc
         clamped = max(rubric.scale_min, min(rubric.scale_max, raw))
         scores.append(

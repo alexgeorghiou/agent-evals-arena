@@ -89,7 +89,7 @@ class OpenAIProvider(Provider):
     vendor = "openai"
 
     def __init__(self, model: str | None = None, *, client: Any = None) -> None:
-        super().__init__(model or os.getenv("ARENA_OPENAI_MODEL", DEFAULT_MODEL))
+        super().__init__(model or os.getenv("ARENA_OPENAI_MODEL") or DEFAULT_MODEL)
         if client is None:
             try:
                 import openai

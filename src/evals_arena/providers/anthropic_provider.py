@@ -22,8 +22,7 @@ DEFAULT_MODEL = "claude-opus-5-5"
 
 def to_anthropic_tools(tools: list[ToolSpec]) -> list[dict[str, Any]]:
     return [
-        {"name": t.name, "description": t.description, "input_schema": t.parameters}
-        for t in tools
+        {"name": t.name, "description": t.description, "input_schema": t.parameters} for t in tools
     ]
 
 
@@ -97,7 +96,7 @@ class AnthropicProvider(Provider):
     vendor = "anthropic"
 
     def __init__(self, model: str | None = None, *, client: Any = None) -> None:
-        super().__init__(model or os.getenv("ARENA_ANTHROPIC_MODEL", DEFAULT_MODEL))
+        super().__init__(model or os.getenv("ARENA_ANTHROPIC_MODEL") or DEFAULT_MODEL)
         self.effort = os.getenv("ARENA_ANTHROPIC_EFFORT")  # low|medium|high|xhigh|max
         if client is None:
             try:
