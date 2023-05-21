@@ -1,0 +1,33 @@
+services:
+  # One-shot job that runs the example suites and a pairwise comparison so the
+  # dashboard has something to show. Uses the offline fake provider by default.
+  seed:
+    build: .
+    command: >
+      sh -c "arena run suites --store /data -m fake:fake-strong &&
+             arena run suites --store /data -m fake:fake-fast &&
+             arena compare suites -a fake:fake-strong -b fake:fake-sloppy --store /data &&
+             arena compare suites -a fake:fake-fast -b fake:fake-strong --store /data"
+    volumes:
+      - arena-data:/data
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+
+  dashboard:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - arena-data:/data
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  arena-data:
